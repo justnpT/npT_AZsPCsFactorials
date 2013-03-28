@@ -1,0 +1,15 @@
+# generated files
+bin/
+gen/
+
+# Java class files
+*.class
+
+# Class path
+.classpath
+
+# Project files
+.project
+
+# Log files
+*.log
