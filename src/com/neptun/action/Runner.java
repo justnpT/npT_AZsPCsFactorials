@@ -17,7 +17,9 @@ public class Runner {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {}
+	public static void main(String[] args) {
+		// i will not show
+	}
 
 	/**
 	 * prepare equation with set number of operations
