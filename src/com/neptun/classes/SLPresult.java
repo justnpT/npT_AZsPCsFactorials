@@ -8,10 +8,12 @@ public class SLPresult {
 	private BigDecimal target;
 	private String equation;
 	private BigDecimal distanceFromTarget;
+	private int[] inputArray;
 	
-	public SLPresult(BigDecimal target, BigDecimal score) {
+	public SLPresult(BigDecimal target, BigDecimal score, int[] inputArray) {
 		this.score = score;
 		this.target = target;
+		this.inputArray = inputArray;
 		this.distanceFromTarget = getAbsoluteValueOf(this.target.subtract(getAbsoluteValueOf(this.score)));
 	}
 
@@ -59,5 +61,9 @@ public class SLPresult {
 
 	public BigDecimal getDistance() {
 		return this.distanceFromTarget;
+	}
+
+	public int[] getInputArray() {
+		return this.inputArray;
 	}
 }

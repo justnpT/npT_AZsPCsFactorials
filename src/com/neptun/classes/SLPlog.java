@@ -51,9 +51,19 @@ public class SLPlog {
 	public void logInput(int iterOnInput, int[] forInputArray) throws IOException {
 		  FileWriter fstream = new FileWriter(directory+"/input"+(iterOnInput+1)+".txt");
 		  this.iterOut = new BufferedWriter(fstream);
-		  iterOut.write("searching for input: "+forInputArray.toString());
+		  iterOut.write("searching for input: "+getInputElements(forInputArray));
 		  iterOut.write("\n");
 		  
+	}
+
+	private String getInputElements(int[] forInputArray) {
+		String result = "{";
+		for (int i = 0; i < forInputArray.length-1; i++) {
+			result = result + forInputArray[i] +",";
+		}
+		result = result + forInputArray[forInputArray.length-1];
+		result = result + "}";
+		return result;
 	}
 
 	public void beginLogEquation(int t, int size) throws IOException {
@@ -86,7 +96,7 @@ public class SLPlog {
 	}
 
 	public void logMasterResult(SLPresult master, int i) throws IOException {
-		out.write("rezultat numer "+(i+1)+": "+master.getScore()+"\n rownanie: "+master.getEquation()+" \n odleglos od targetu: "+master.getDistance()+"\n======================");
+		out.write("rezultat numer "+(i+1)+": "+master.getScore()+"\n rownanie: "+master.getEquation()+" \n odleglos od targetu: "+master.getDistance()+" \n input rownania: "+getInputElements(master.getInputArray())+"\n======================");
 		out.write("\n");
 	}
 
