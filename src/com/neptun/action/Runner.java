@@ -58,6 +58,8 @@ public class Runner {
 		log.beginLogging();
 		
 		ArrayList<SLPresult> masterResults = new ArrayList<SLPresult>();
+		Date firstDate = new Date();
+
 		for (int j = 0; j < inputMatrix.length; j++) {					
 		Date date = new Date();
 		BigDecimal target = decimalSilnia(new BigDecimal(factorial));
@@ -124,7 +126,8 @@ public class Runner {
 		for (int i = 0; i < masterResults.size(); i++) {
 			log.logMasterResult(masterResults.get(i), i);
 		}
-		log.finish();	
+		Date lastDate = new Date();
+		log.finish(firstDate,lastDate);	
 		}
 		catch (Exception e) {
 			// TODO Auto-generated catch block

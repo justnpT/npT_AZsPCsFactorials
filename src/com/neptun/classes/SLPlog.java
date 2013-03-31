@@ -67,7 +67,9 @@ public class SLPlog {
 		iterOut.write("\n");
 	}
 
-	public void finish() throws IOException {
+	public void finish(Date firstDate, Date lastDate) throws IOException {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");			
+		this.out.write("\n\n==========================\npoczatek:"+dateFormat.format(firstDate)+"\nkoniec:  "+dateFormat.format(lastDate));
 		this.out.close();
 		}
 
