@@ -29,17 +29,21 @@ public class Runner {
 	 * @param args
 	 */
 	public static void main(String[] args) {		
-			int fl = 13;
-	
-			int foCount = 3;
-			int iArS = 3;
+			int fl = Integer.parseInt(args[0]);
+			int oCountL = Integer.parseInt(args[1]);
+			int oCountT = Integer.parseInt(args[2]);
+			int iArSL = Integer.parseInt(args[3]);
+			int iArST = Integer.parseInt(args[4]);
+
 			
+			
+			System.out.println("oblicz SLP dla silni "+fl+" w przedzale operacji: <"+oCountL+","+oCountT+"> w przedzale inputow: <"+iArSL+","+iArST+"> ");
 			//operation count
-			for (int i = 2; i < 5; i++) {
+			for (int i = oCountL; i <= oCountT; i++) {
 			//	input length count
-				for (int j = 2; j < 5; j++) {
+				for (int j = iArSL; j <= iArST; j++) {
 					solveSLP(fl, i, j);	
-					System.out.println("koniec liczenia dla silni "+1+", dla "+i+" operacji, dla dlugosci inputu "+j);
+					System.out.println("koniec liczenia dla silni "+fl+", dla "+i+" operacji, dla dlugosci inputu "+j);
 				}
 			}
 	}
