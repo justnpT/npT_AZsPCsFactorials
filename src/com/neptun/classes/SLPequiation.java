@@ -22,8 +22,7 @@ public class SLPequiation {
 		this.operationCount = (cs.length-1)/2;
 		for (int i = 0; i < variablesCount; i++) {
 			this.variableMatrix.add(inputList);
-		}
-		
+		}		
 	}
 
 	public boolean hasNext() {
@@ -38,14 +37,14 @@ public class SLPequiation {
 		for (int i = 0; i < operationCount; i++) {
 			firstFactor = result;
 			secondFactor = variableMatrix.get(i+1).get(clock.get(i+1));
-			if (equation[1+i*2]=='*') {
-				result = firstFactor.multiply(secondFactor);
+			if (equation[1+i*2]=='*') {				
+					result = firstFactor.multiply(secondFactor);
 			}
 			if (equation[1+i*2]==('+')) {
-				result = firstFactor.add(secondFactor);			
+					result = firstFactor.add(secondFactor);								
 			}
 			if (equation[1+i*2]==('-')) {
-				result = firstFactor.subtract(secondFactor);						
+					result = firstFactor.subtract(secondFactor);											
 			}
 		}
 		this.clock.setNext();
@@ -63,5 +62,14 @@ public class SLPequiation {
 	}
 	public String getPreviousEquation() {
 		return this.previuousEquation;		
+	}
+	
+	private BigDecimal getAbsoluteValueOf(BigDecimal bdecimal) {
+		if (bdecimal.compareTo(new BigDecimal(0))==-1) {
+			return bdecimal.negate();
+		}
+		else {
+			return bdecimal;
+		}
 	}
 }

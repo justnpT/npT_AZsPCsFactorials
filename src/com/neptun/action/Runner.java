@@ -1,7 +1,18 @@
 package com.neptun.action;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
+import java.util.List;
+
+import org.paukov.combinatorics.Factory;
+import org.paukov.combinatorics.Generator;
+import org.paukov.combinatorics.ICombinatoricsVector;
 
 import com.neptun.classes.SLPclock;
 import com.neptun.classes.SLPequiation;
@@ -17,76 +28,157 @@ public class Runner {
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
-		
-		try {
-		System.out.println(decimalSilnia(new BigDecimal(13)));
+	public static void main(String[] args) {		
+			int fl = 13;
+	
+			int foCount = 3;
+			int iArS = 3;
+			
+			//operation count
+			for (int i = 2; i < 5; i++) {
+			//	input length count
+				for (int j = 2; j < 5; j++) {
+					solveSLP(fl, i, j);	
+					System.out.println("koniec liczenia dla silni "+1+", dla "+i+" operacji, dla dlugosci inputu "+j);
+				}
+			}
+	}
 
-		SLPlog log = new SLPlog();
-		BigDecimal target = decimalSilnia(new BigDecimal(7));
-		int[] forInputArray = {2,3,5};
+	/**
+	 * @param factorial  this is eg. 13!
+	 * @param operationCount	this is how many + - + + we will have
+	 * @param inputArraySize this is if input array will be of length {1,2} or {1,2,3}
+	 */
+	private static void solveSLP(int factorial, int operationCount, int inputArraySize) {
+		
+		SLPlog log = new SLPlog(factorial, operationCount, inputArraySize);
+		int[][] inputMatrix = prepareInputMatrix(inputArraySize);
+		// dla kazdego inputu o zadanej dlugosci
+		try {
+		log.beginLogging();
+		
+		ArrayList<SLPresult> masterResults = new ArrayList<SLPresult>();
+		for (int j = 0; j < inputMatrix.length; j++) {					
+		Date date = new Date();
+		BigDecimal target = decimalSilnia(new BigDecimal(factorial));
+		int[] forInputArray = inputMatrix[j]; // {2,3} , {2,4}, {2,5} itd
 		SLPinputList inputList = new SLPinputList(forInputArray, target);
 
 		ArrayList<SLPresult> finalResults = new ArrayList<SLPresult>();
-		ArrayList<char[]> equationMatrix = prepareEquationMatrix(3);
-//		ArrayList<char[]> equationMatrix = new ArrayList<char[]>();
-//		char[] test = {'v','+','v','-','v','*','v'};
-//		equationMatrix.add(test);
+		ArrayList<char[]> equationList = prepareEquationMatrix(operationCount);
 		
-	for (int t = 0; t < equationMatrix.size(); t++) {
-		System.out.println("analizuje rownanie numer "+(t+1)+". Rownan: "+equationMatrix.size());
+	SLPresult finalResult = null;
+	
+		log.logInput(j, forInputArray);
+	// dla kazdego rownania o zadanym rozmiarze
+	for (int t = 0; t < equationList.size(); t++) {
+		if (finalResult==null) {
+			finalResult = new SLPresult(target, new BigDecimal(1));
+			finalResults.add(finalResult);
+		}
+
+//		System.out.println("analizuje rownanie numer "+(t+1)+". Rownan: "+equationList.size());
 		
-		SLPclock clock = new SLPclock(equationMatrix.get(t), inputList.size());
-		SLPequiation slpEquation = new SLPequiation(equationMatrix.get(t), inputList, clock);
+		SLPclock clock = new SLPclock(equationList.get(t), inputList.size());
+		SLPequiation slpEquation = new SLPequiation(equationList.get(t), inputList, clock);
 
 		BigDecimal score = slpEquation.nextIteration();
 		SLPresult currentResult = new SLPresult(target, score);
 
 		SLPresult nextResult= new SLPresult(target, score);
 
-//		log.logResult(currentResult);
 		while (slpEquation.hasNext()) {
 			score = slpEquation.nextIteration();
 			nextResult = new SLPresult(target, score);
 			if (nextResult.compareTo(currentResult)==1) {
 				currentResult = nextResult;		
 				currentResult.setEquation(slpEquation.getPreviousEquation());
-//				log.logResult(currentResult);
-//				log.logEquation(currentResult.getEquation());
 			}
 			
 		}
-		finalResults.add(currentResult);
-		System.out.println("rezultat rownania: "+currentResult.getScore());
-		System.out.println("rownanie: "+currentResult.getEquation());
-		System.out.println("odleglos od targetu: "+currentResult.getDistance());
-		System.out.println("--------------------------------------------------");
+		if (currentResult.compareTo(finalResult)==1) {
+			finalResult = currentResult;
+			finalResults.add(currentResult);
+			log.newFinalResult();
+//			System.out.println("nowy rezultat dodany jako finalowy");
+			log.logEquation(currentResult.getScore(), currentResult.getEquation(), currentResult.getDistance());
+		}
 	}
-	
-	System.out.println("koniec poszukiwan");
-	
-	SLPresult rezultat = finalResults.get(0);
-	for (int i = 0; i < finalResults.size(); i++) {
-//		System.out.println("rezultat finalowy numer "+i);
-//		log.logResult(finalResults.get(i));
-//		log.logEquation(finalResults.get(i).getEquation());
-		if (finalResults.get(i).compareTo(rezultat)==1) {
-			rezultat = finalResults.get(i);
-			System.out.println("lepszy rezultat: "+rezultat.getScore());
-			System.out.println("jego rownanie: "+rezultat.getEquation());
+		
+	SLPresult rezultat = finalResults.get(finalResults.size()-1);
+	for (int i = 0; i < finalResults.size()-1; i++) {
+		if (finalResults.get(i).compareTo(rezultat)==0) {
+			masterResults.add(finalResults.get(i));
+			log.sameResult();
+			log.logEquation(rezultat.getScore(), rezultat.getEquation(), rezultat.getDistance());
 		}
 
+	}						
+		masterResults.add(rezultat);
+		Date date2 = new Date();
+		log.finishForInput(date, date2, target, rezultat);
+		
 	}
-	System.out.println("==========================");
-	System.out.println(" koniec, target to: "+target);
-	System.out.println("najlepszy wynik to: "+rezultat.getScore());
-	System.out.println("rownianie to: "+rezultat.getEquation());
-
-	}
+		
+		masterResults = extractBestResults(masterResults);
+		for (int i = 0; i < masterResults.size(); i++) {
+			log.logMasterResult(masterResults.get(i), i);
+		}
+		log.finish();	
+		}
 		catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}				
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+}	
+	
+
+	private static ArrayList<SLPresult> extractBestResults(
+			ArrayList<SLPresult> inputResults) {
+		ArrayList<SLPresult> outputResults = new ArrayList<SLPresult>();
+		
+		SLPresult best = inputResults.get(0);
+		int bestIndex=0;
+		for (int i = 1; i < inputResults.size(); i++) {
+			if (best.compareTo(inputResults.get(i))==-1) {
+				best = inputResults.get(i);
+				bestIndex = i;
+			}
+		}
+		outputResults.add(best);
+		for (int i = 0; i < inputResults.size(); i++) {
+			if (i!=bestIndex && (best.compareTo(inputResults.get(i))==0)) {
+				outputResults.add(inputResults.get(i));
+			}
+		}				
+		return outputResults;
+	}
+
+	private static int[][] prepareInputMatrix(int inputArraySize) {
+		 // Create the initial vector
+		
+		int matrixSize = intSilnia(8)/(intSilnia(inputArraySize)*(intSilnia(8-inputArraySize)));
+		int[][] matrix = new int[matrixSize][];
+		   ICombinatoricsVector<Integer> initialVector = Factory.createVector(
+		      new Integer[] {new Integer(2), new Integer(3), new Integer(4), new Integer(5), new Integer(9), new Integer(6), new Integer(7), new Integer(8) } );
+
+		   // Create a simple combination generator to generate 3-combinations of the initial vector
+		   Generator<Integer> gen = Factory.createSimpleCombinationGenerator(initialVector, inputArraySize);
+		   // Print all possible combinations
+		 
+			
+		   int j = 0;
+		   for (ICombinatoricsVector<Integer> combination : gen) {
+		      List<Integer> list = combination.getVector();
+		      int[] array = new int[inputArraySize];
+		      for (int i = 0; i < list.size(); i++) {
+				array[i] = list.get(i).intValue();
+			
+			}
+		      matrix[j] = array;
+		      j++;
+		   }
+		return matrix;
 	}
 
 	/**
@@ -114,8 +206,6 @@ public class Runner {
 				equation[2*(1+i)] = 'v';
 			}
         	matrix.add(equation.clone());
-//            System.out.println(rep);
-//            System.out.println(equation);
         }	
 		
 		return matrix;
@@ -148,6 +238,15 @@ public class Runner {
 	else {
 		return _double*doubleSilnia(_double-1);
 	}
+	}	
+	
+	private static int intSilnia(int intek) {		 
+		if (intek == 1) {
+			return 1;
+		}
+		else {
+			return intek*intSilnia(intek-1);
+		}
 	}	
 	
 }
