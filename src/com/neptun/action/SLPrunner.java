@@ -13,6 +13,7 @@ import com.neptun.classes.SLPclock;
 import com.neptun.classes.SLPequiation;
 import com.neptun.classes.SLPinputList;
 import com.neptun.classes.SLPlog;
+import com.neptun.classes.SLPlogReader;
 import com.neptun.classes.SLPresult;
 
 public class SLPrunner {
@@ -21,11 +22,11 @@ public class SLPrunner {
 	 * @param args
 	 */
 	public static void main(String[] args) {	
-		//	mode = 1 => liczenie silni. np 1 13 3 4 2 3 <- liczenie silni 13 dla 3 do 4 operacji dla inputu od 2 do 3 
 			int mode = Integer.parseInt(args[0]);
-					
+			int fl = Integer.parseInt(args[1]);
+			
+			//	mode = 1 => liczenie silni. np 1 13 3 4 2 3 <- liczenie silni 13 dla 3 do 4 operacji dla inputu od 2 do 3 
 			if (mode==1) {
-				int fl = Integer.parseInt(args[1]);
 				int oCountL = Integer.parseInt(args[2]);
 				int oCountT = Integer.parseInt(args[3]);
 				int iArSL = Integer.parseInt(args[4]);
@@ -39,13 +40,112 @@ public class SLPrunner {
 					solveSLP(fl, i, j);	
 					System.out.println("koniec liczenia dla silni "+fl+", dla "+i+" operacji, dla dlugosci inputu "+j);
 				}
-			}
-			if (mode==2) {
-				System.out.println("oblicz SLP dla silni "+fl+" w przedzale operacji: <"+oCountL+","+oCountT+"> w przedzale inputow: <"+iArSL+","+iArST+"> ");
+			}}
+
+			// mode = 2 => 2 26 3 3. liczenie kolejnych optymalnej operacji dla juz gotowego targetu i pojedynczego inputu. Np z inputu {2,3} powstal najlepszy wynik dla silni 13, wiec teraz korzystajac z elementow tego inputu i tych utworzonych, szukamy dalszych dobrych wynikow
+			if (mode==2) {				
+				int oCount = Integer.parseInt(args[2]);
+				int iAL = Integer.parseInt(args[3]);
+				
+				improveSLP(fl, oCount, iAL);
+				System.out.println("oblicz SLP dla najlepszego wyniku silni "+fl+" w dla ilosci operacji: "+oCount+", dla inputu dlugosci"+iAL+"> korzystajac z inputow juz gotowych");
 				
 			}
-			}
+			
 	}
+
+	private static void improveSLP(int factorial, int operationCount, int inputArrayLength) {
+		
+		SLPlogReader reader = new SLPlogReader(factorial, operationCount, inputArrayLength);
+		try {
+			int[][] inputMatrix = reader.getMasterInputs();
+//		log.beginLogging();
+		
+		ArrayList<SLPresult> masterResults = new ArrayList<SLPresult>();
+		Date firstDate = new Date();
+
+		// dla kazdego inputu o zadanej dlugosci
+		for (int j = 0; j < inputMatrix.length; j++) {					
+		Date date = new Date();
+		BigDecimal target = decimalSilnia(new BigDecimal(factorial));
+		
+		int[] forInputArray = inputMatrix[j]; // {2,3} , {2,4}, {2,5} itd		
+		SLPinputList inputList = new SLPinputList(forInputArray, target);
+		ArrayList<BigDecimal> usedNumbers = reader.getUserNumbers(j); // TODO: przygotuj to. To ma zwrocic liczby uzyte w rownaniu
+		ArrayList<BigDecimal> additionalInputList = reader.getAdditionalInput(j); // To jest juz zrobione i zwraca liczby tworzone przez rownanie
+		inputList = inputList.refactorRemove(usedNumbers); // TODO: remove too big factors which werent used
+		inputList = inputList.refactor(additionalInputList); // TODO: add additional input to the list 
+
+		ArrayList<SLPresult> finalResults = new ArrayList<SLPresult>();
+		ArrayList<char[]> equationList = prepareEquationMatrix(operationCount);
+		
+	SLPresult finalResult = null;
+	
+//		log.logInput(j, forInputArray);
+	// dla kazdego rownania o zadanym rozmiarze
+	for (int t = 0; t < equationList.size(); t++) {
+		if (finalResult==null) {
+			finalResult = new SLPresult(target, new BigDecimal(1), forInputArray);
+			finalResults.add(finalResult);
+		}
+
+//		System.out.println("analizuje rownanie numer "+(t+1)+". Rownan: "+equationList.size());
+		
+		SLPclock clock = new SLPclock(equationList.get(t), inputList.size());
+		SLPequiation slpEquation = new SLPequiation(equationList.get(t), inputList, clock);
+
+		BigDecimal score = slpEquation.nextIteration();
+		SLPresult currentResult = new SLPresult(target, score, forInputArray);
+
+		SLPresult nextResult= new SLPresult(target, score, forInputArray);
+
+		while (slpEquation.hasNext()) {
+			score = slpEquation.nextIteration();
+			nextResult = new SLPresult(target, score, forInputArray);
+			if (nextResult.compareTo(currentResult)==1) {
+				currentResult = nextResult;		
+				currentResult.setEquation(slpEquation.getPreviousEquation());
+			}
+			
+		}
+		if (currentResult.compareTo(finalResult)==1) {
+			finalResult = currentResult;
+			finalResults.add(currentResult);
+//			log.newFinalResult();
+//			System.out.println("nowy rezultat dodany jako finalowy");
+//			log.logEquation(currentResult.getScore(), currentResult.getEquation(), currentResult.getDistance());
+		}
+	}
+		
+	SLPresult rezultat = finalResults.get(finalResults.size()-1);
+	for (int i = 0; i < finalResults.size()-1; i++) {
+		if (finalResults.get(i).compareTo(rezultat)==0) {
+			masterResults.add(finalResults.get(i));
+
+//			log.sameResult();
+//			log.logEquation(rezultat.getScore(), rezultat.getEquation(), rezultat.getDistance());
+		}
+
+	}						
+		masterResults.add(rezultat);
+
+		Date date2 = new Date();
+//		log.finishForInput(date, date2, target, rezultat);
+		
+	}
+		
+		masterResults = extractBestResults(masterResults);
+		for (int i = 0; i < masterResults.size(); i++) {
+//			log.logMasterResult(masterResults.get(i), i);
+		}
+		Date lastDate = new Date();
+//		log.finish(firstDate,lastDate);	
+		}
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+}
 
 	/**
 	 * @param factorial  this is eg. 13!

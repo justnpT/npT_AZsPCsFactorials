@@ -55,4 +55,14 @@ public class SLPinputList extends ArrayList<BigDecimal>{
 		resultArray.add(currentNumber);
 		return resultArray;
 	}
+
+	public SLPinputList refactor(ArrayList<BigDecimal> additionalInputList) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public SLPinputList refactorRemove(ArrayList<BigDecimal> usedNumbers) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
